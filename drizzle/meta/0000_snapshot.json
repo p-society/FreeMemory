@@ -1,0 +1,653 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "29bc0ef6-e80e-4d08-aef7-a4a4f4face7c",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "decay_schedule": {
+      "name": "decay_schedule",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "memory_id": {
+          "name": "memory_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_decay_at": {
+          "name": "last_decay_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.794Z\"'"
+        },
+        "next_decay_at": {
+          "name": "next_decay_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "decay_interval_hours": {
+          "name": "decay_interval_hours",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 1
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": true
+        }
+      },
+      "indexes": {
+        "idx_decay_schedule_next": {
+          "name": "idx_decay_schedule_next",
+          "columns": [
+            "next_decay_at"
+          ],
+          "isUnique": false
+        },
+        "idx_decay_schedule_memory": {
+          "name": "idx_decay_schedule_memory",
+          "columns": [
+            "memory_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "memories": {
+      "name": "memories",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "embedding_id": {
+          "name": "embedding_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "strength": {
+          "name": "strength",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0.8
+        },
+        "decay_rate": {
+          "name": "decay_rate",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0.95
+        },
+        "initial_strength": {
+          "name": "initial_strength",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "access_count": {
+          "name": "access_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "reinforcement_count": {
+          "name": "reinforcement_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "last_accessed": {
+          "name": "last_accessed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.793Z\"'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.793Z\"'"
+        },
+        "sector_id": {
+          "name": "sector_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_memories_strength": {
+          "name": "idx_memories_strength",
+          "columns": [
+            "strength"
+          ],
+          "isUnique": false
+        },
+        "idx_memories_sector": {
+          "name": "idx_memories_sector",
+          "columns": [
+            "sector_id"
+          ],
+          "isUnique": false
+        },
+        "idx_memories_last_accessed": {
+          "name": "idx_memories_last_accessed",
+          "columns": [
+            "last_accessed"
+          ],
+          "isUnique": false
+        },
+        "idx_memories_created": {
+          "name": "idx_memories_created",
+          "columns": [
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "idx_memories_sector_strength": {
+          "name": "idx_memories_sector_strength",
+          "columns": [
+            "sector_id",
+            "strength"
+          ],
+          "isUnique": false
+        },
+        "idx_memories_decay": {
+          "name": "idx_memories_decay",
+          "columns": [
+            "last_accessed",
+            "decay_rate"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "strength_check": {
+          "name": "strength_check",
+          "value": "\"memories\".\"strength\" >= 0.0 AND \"memories\".\"strength\" <= 1.0"
+        },
+        "decay_rate_check": {
+          "name": "decay_rate_check",
+          "value": "\"memories\".\"decay_rate\" >= 0.85 AND \"memories\".\"decay_rate\" <= 0.99"
+        },
+        "initial_strength_check": {
+          "name": "initial_strength_check",
+          "value": "\"memories\".\"initial_strength\" >= 0.0 AND \"memories\".\"initial_strength\" <= 1.0"
+        }
+      }
+    },
+    "memory_access_log": {
+      "name": "memory_access_log",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "memory_id": {
+          "name": "memory_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "access_type": {
+          "name": "access_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "query_context": {
+          "name": "query_context",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "strength_before": {
+          "name": "strength_before",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "strength_after": {
+          "name": "strength_after",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "accessed_at": {
+          "name": "accessed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.794Z\"'"
+        }
+      },
+      "indexes": {
+        "idx_access_log_memory": {
+          "name": "idx_access_log_memory",
+          "columns": [
+            "memory_id"
+          ],
+          "isUnique": false
+        },
+        "idx_access_log_time": {
+          "name": "idx_access_log_time",
+          "columns": [
+            "accessed_at"
+          ],
+          "isUnique": false
+        },
+        "idx_access_log_type": {
+          "name": "idx_access_log_type",
+          "columns": [
+            "access_type"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "sectors": {
+      "name": "sectors",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "decay_multiplier": {
+          "name": "decay_multiplier",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 1
+        },
+        "memory_count": {
+          "name": "memory_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "topics": {
+          "name": "topics",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_accessed": {
+          "name": "last_accessed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.793Z\"'"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_sectors_parent": {
+          "name": "idx_sectors_parent",
+          "columns": [
+            "parent_id"
+          ],
+          "isUnique": false
+        },
+        "idx_sectors_name": {
+          "name": "idx_sectors_name",
+          "columns": [
+            "name"
+          ],
+          "isUnique": false
+        },
+        "idx_sectors_last_accessed": {
+          "name": "idx_sectors_last_accessed",
+          "columns": [
+            "last_accessed"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "system_config": {
+      "name": "system_config",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value_type": {
+          "name": "value_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'string'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.794Z\"'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "vector_index": {
+      "name": "vector_index",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "memory_id": {
+          "name": "memory_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "vector_bytes": {
+          "name": "vector_bytes",
+          "type": "blob",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "dimension": {
+          "name": "dimension",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1536
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.793Z\"'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.793Z\"'"
+        }
+      },
+      "indexes": {
+        "vector_index_memory_id_unique": {
+          "name": "vector_index_memory_id_unique",
+          "columns": [
+            "memory_id"
+          ],
+          "isUnique": true
+        },
+        "idx_vector_memory": {
+          "name": "idx_vector_memory",
+          "columns": [
+            "memory_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "waypoints": {
+      "name": "waypoints",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_memory_id": {
+          "name": "source_memory_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "target_memory_id": {
+          "name": "target_memory_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "relationship_type": {
+          "name": "relationship_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "strength": {
+          "name": "strength",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0.8
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'\"2025-10-28T05:32:30.793Z\"'"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_waypoints_source": {
+          "name": "idx_waypoints_source",
+          "columns": [
+            "source_memory_id"
+          ],
+          "isUnique": false
+        },
+        "idx_waypoints_target": {
+          "name": "idx_waypoints_target",
+          "columns": [
+            "target_memory_id"
+          ],
+          "isUnique": false
+        },
+        "idx_waypoints_strength": {
+          "name": "idx_waypoints_strength",
+          "columns": [
+            "strength"
+          ],
+          "isUnique": false
+        },
+        "idx_waypoints_type": {
+          "name": "idx_waypoints_type",
+          "columns": [
+            "relationship_type"
+          ],
+          "isUnique": false
+        },
+        "idx_waypoints_composite": {
+          "name": "idx_waypoints_composite",
+          "columns": [
+            "source_memory_id",
+            "target_memory_id",
+            "strength"
+          ],
+          "isUnique": false
+        },
+        "idx_waypoints_path": {
+          "name": "idx_waypoints_path",
+          "columns": [
+            "source_memory_id",
+            "strength",
+            "relationship_type"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "no_self_reference": {
+          "name": "no_self_reference",
+          "value": "\"waypoints\".\"source_memory_id\" != \"waypoints\".\"target_memory_id\""
+        },
+        "waypoint_strength_check": {
+          "name": "waypoint_strength_check",
+          "value": "\"waypoints\".\"strength\" >= 0.0 AND \"waypoints\".\"strength\" <= 1.0"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
