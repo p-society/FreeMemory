@@ -4,16 +4,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { sql } from 'drizzle-orm';
 
 async function seedDatabase() {
-  console.log('🌱 Seeding database...');
+  console.log('Seeding database...');
 
   try {
-    // Clear existing data
     await db.delete(memories);
     await db.delete(waypoints);
     await db.delete(sectors);
     await db.delete(systemConfig);
 
-    // Insert system configuration
     await db.insert(systemConfig).values([
       { key: 'default_decay_rate', value: '0.95', valueType: 'number' },
       { key: 'min_strength_threshold', value: '0.1', valueType: 'number' },
@@ -24,7 +22,6 @@ async function seedDatabase() {
       { key: 'vector_dimension', value: '1536', valueType: 'number' },
     ]);
 
-    // Create root sectors
     const rootSectors = await db.insert(sectors).values([
       {
         id: 'work',
@@ -45,14 +42,13 @@ async function seedDatabase() {
       {
         id: 'learning',
         name: 'Learning',
-        decayMultiplier: 0.90, // Slower decay for learning content
+        decayMultiplier: 0.90,
         memoryCount: 0,
         topics: ['programming', 'ai', 'mathematics'],
         metadata: { type: 'root', color: 'purple' }
       }
     ]).returning();
 
-    // Create sub-sectors
     await db.insert(sectors).values([
       {
         id: 'programming',
@@ -83,7 +79,6 @@ async function seedDatabase() {
       }
     ]);
 
-    // Create sample memories
     const sampleMemories = await db.insert(memories).values([
       {
         id: uuidv4(),
@@ -142,7 +137,6 @@ async function seedDatabase() {
       }
     ]).returning();
 
-    // Create waypoints (relationships between memories)
     if (sampleMemories.length >= 5) {
       const mem0 = sampleMemories[0];
       const mem1 = sampleMemories[1];
@@ -154,24 +148,24 @@ async function seedDatabase() {
         await db.insert(waypoints).values([
           {
             id: uuidv4(),
-            sourceMemoryId: mem0.id, // Python decorators
-            targetMemoryId: mem1.id, // Multiple inheritance
+            sourceMemoryId: mem0.id,
+            targetMemoryId: mem1.id,
             relationshipType: RELATIONSHIP_TYPES.ELABORATION,
             strength: 0.8,
             metadata: { context: 'decorators are often used in inheritance patterns' }
           },
           {
             id: uuidv4(),
-            sourceMemoryId: mem1.id, // Multiple inheritance problem
-            targetMemoryId: mem2.id, // C3 linearization solution
+            sourceMemoryId: mem1.id,
+            targetMemoryId: mem2.id,
             relationshipType: RELATIONSHIP_TYPES.CAUSAL,
             strength: 0.9,
             metadata: { context: 'solution to the diamond problem' }
           },
           {
             id: uuidv4(),
-            sourceMemoryId: mem3.id, // RAG concept
-            targetMemoryId: mem4.id, // Memory decay
+            sourceMemoryId: mem3.id,
+            targetMemoryId: mem4.id,
             relationshipType: RELATIONSHIP_TYPES.SEMANTIC,
             strength: 0.7,
             metadata: { context: 'both relate to memory systems' }
@@ -180,7 +174,6 @@ async function seedDatabase() {
       }
     }
 
-    // Update sector memory counts
     for (const sector of rootSectors) {
       const memoryCount = await db.select({ count: sql`count(*)` })
         .from(memories)
@@ -192,18 +185,17 @@ async function seedDatabase() {
         .where(sql`id = ${sector.id}`);
     }
 
-    console.log('✅ Database seeded successfully!');
-    console.log(`📊 Created ${rootSectors.length} root sectors`);
-    console.log(`💾 Created ${sampleMemories.length} sample memories`);
-    console.log(`🔗 Created relationships between memories`);
+    console.log('Database seeded successfully!');
+    console.log(`Created ${rootSectors.length} root sectors`);
+    console.log(`Created ${sampleMemories.length} sample memories`);
+    console.log(`Created relationships between memories`);
 
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    console.error('Seeding failed:', error);
     process.exit(1);
   }
 }
 
-// Run seed if this file is executed directly
 if (import.meta.main) {
   seedDatabase();
 }
