@@ -7,6 +7,10 @@ This schema implements a brain-inspired memory system with three core components
 2. **Memory Sectors** - Hierarchical contextual organization
 3. **Waypoints & Graph** - Multi-hop knowledge traversal
 
+### Diagram
+
+![Diagram](assets/diagram-export-10-28-2025-2_51_34-PM.png)
+
 ## Core Tables
 
 ### 1. Memories Table
