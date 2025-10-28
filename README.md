@@ -1,15 +1,6 @@
-# memory
+## FreeMemory
 
-To install dependencies:
+### A human brain inspired context memory for Large Language Models 
 
-```bash
-bun install
-```
+- [Design](schema-design.md)
 
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.2.23. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
