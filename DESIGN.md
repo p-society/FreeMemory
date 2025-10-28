@@ -1,4 +1,4 @@
-# Brain-Inspired Memory System - Database Schema Design
+# Brain-Inspired System for RAG - Database Schema Design
 
 ## Overview
 
