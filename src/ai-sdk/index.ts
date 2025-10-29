@@ -23,7 +23,10 @@ export async function GenerateGraphRelation(text:string) {
     return response;
 }
 
-export async function GenerateEmbedding(text:string) {
+type EmbeddingVector = number[] | Float32Array;
+
+export async function GenerateEmbedding(text:string): Promise<number[]> {
+    try {
     const embeddingResponse = await embed({
         model: google.textEmbedding('text-embedding-004'),
         value: text,
@@ -32,6 +35,18 @@ export async function GenerateEmbedding(text:string) {
                 outputDimensionality : 768
             }
         }
-    });
-    return embeddingResponse;
+    }) as { embedding?: EmbeddingVector; embeddings?: EmbeddingVector[] };
+
+    const vector: EmbeddingVector | undefined = embeddingResponse.embedding ?? embeddingResponse.embeddings?.[0];
+
+    if (!vector) {
+        throw new Error('Embedding provider returned an empty vector response.');
+    }
+    console.log(Array.from(vector));
+    return Array.from(vector);
+} catch (error) {
+    console.error('Error generating embedding:', error);
+    throw error;
+}
+
 }

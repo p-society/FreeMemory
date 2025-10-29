@@ -14,6 +14,9 @@ export const memories = sqliteTable('memories', {
   id: text('id').primaryKey(),
   content: text('content').notNull(),
   embeddingId: integer('embedding_id'),
+  userId: text('user_id').notNull(),
+  chatId: text('chat_id').notNull(),
+  userType: text('user_type').notNull(),
   strength: real('strength').notNull().default(0.8),
   decayRate: real('decay_rate').notNull().default(0.95),
   initialStrength: real('initial_strength').notNull(),
@@ -25,6 +28,8 @@ export const memories = sqliteTable('memories', {
   metadata: text('metadata', { mode: 'json' }),
 }, (table) => ({
   strengthIdx: index('idx_memories_strength').on(table.strength),
+  userIdIdx: index('idx_memories_user_id').on(table.userId),
+  chatIdIdx: index('idx_memories_chat_id').on(table.chatId),
   sectorIdx: index('idx_memories_sector').on(table.sectorId),
   lastAccessedIdx: index('idx_memories_last_accessed').on(table.lastAccessed),
   createdAtIdx: index('idx_memories_created').on(table.createdAt),

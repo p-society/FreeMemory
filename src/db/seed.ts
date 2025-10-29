@@ -82,6 +82,9 @@ async function seedDatabase() {
     const sampleMemories = await db.insert(memories).values([
       {
         id: uuidv4(),
+        userId: uuidv4(),
+        chatId: uuidv4(),
+        userType: 'ai',
         content: 'Python decorators are powerful for metaprogramming and allow you to modify function behavior dynamically.',
         strength: 0.8,
         decayRate: 0.95,
@@ -93,6 +96,9 @@ async function seedDatabase() {
       },
       {
         id: uuidv4(),
+        userId: uuidv4(),
+        chatId: uuidv4(),
+        userType: 'ai',
         content: 'Multiple inheritance in Python can lead to the diamond problem, where a class inherits from two classes that both inherit from the same base class.',
         strength: 0.75,
         decayRate: 0.95,
@@ -104,6 +110,9 @@ async function seedDatabase() {
       },
       {
         id: uuidv4(),
+        userId: uuidv4(),
+        chatId: uuidv4(),
+        userType: 'user',
         content: 'Python uses C3 linearization (Method Resolution Order) to resolve method conflicts in multiple inheritance scenarios.',
         strength: 0.7,
         decayRate: 0.95,
@@ -115,6 +124,9 @@ async function seedDatabase() {
       },
       {
         id: uuidv4(),
+        userId: uuidv4(),
+        chatId: uuidv4(),
+        userType: 'ai',
         content: 'RAG (Retrieval-Augmented Generation) combines vector search with language models to provide more accurate and context-aware responses.',
         strength: 0.85,
         decayRate: 0.88,
@@ -126,6 +138,9 @@ async function seedDatabase() {
       },
       {
         id: uuidv4(),
+        userId: uuidv4(),
+        chatId: uuidv4(),
+        userType: 'user',
         content: 'Memory decay algorithms simulate human forgetting patterns, strengthening frequently accessed memories while weakening unused ones.',
         strength: 0.9,
         decayRate: 0.88,
