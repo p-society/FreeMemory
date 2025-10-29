@@ -4,7 +4,7 @@ import { addMemory } from '../hnsw/createHnswIndex';
 
 const router = new Hono();
 
-router.post('/memory', async (c) => {
+router.post('/memory/add', async (c) => {
     const { userId, chatId, userType, content } = await c.req.json();
     const result = memorySchema.safeParse({ userId, chatId, userType, content });
     if (!result.success) {
