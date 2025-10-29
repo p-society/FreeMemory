@@ -1,6 +1,4 @@
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
-import { Database } from 'bun:sqlite';
-import { drizzle } from 'drizzle-orm/bun-sqlite';
 import { db } from './db';
 
 async function runMigrations() {
