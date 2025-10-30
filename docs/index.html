@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FreeMemory - Brain-Inspired AI Memory System</title>
+  <meta name="description" content="A brain-inspired memory system for RAG applications with HMD v2 decay algorithm, memory sectors, and graph-based knowledge traversal.">
+  <style>
+    /* Minimal, modern reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    /* Typography + base */
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+      line-height: 1.6;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    /* Light theme (default) */
+    :root {
+      --bg: #f8fafc;         /* neutral background */
+      --fg: #0b1220;         /* main foreground */
+      --muted: #475569;      /* subdued text */
+      --card: #ffffff;       /* cards & surfaces */
+      --brand: #8b5cf6;      /* purple brand */
+      --border: #e5e7eb;     /* subtle border */
+      --btn-fg: #ffffff;     /* button text */
+      --link: #8b5cf6;       /* link color */
+      --focus: #c4b5fd;      /* focus ring */
+    }
+
+    /* Dark theme (space black) toggled via checkbox (no JS) */
+    body:has(#theme-toggle:checked) {
+      --bg: #0b0f14;         /* space black */
+      --fg: #e6edf3;         /* near-white */
+      --muted: #94a3b8;      /* soft slate */
+      --card: #0f141b;       /* deeper space */
+      --brand: #a78bfa;      /* lighter purple */
+      --border: #202732;     /* subtle outline */
+      --btn-fg: #0b0f14;     /* contrast on brand */
+      --link: #a78bfa;
+      --focus: #7c3aed;
+    }
+
+    /* Utilities */
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    .stack-sm > * + * { margin-top: .5rem; }
+    .stack-md > * + * { margin-top: 1rem; }
+    .stack-lg > * + * { margin-top: 1.5rem; }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+    }
+    .logo {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    /* Theme toggle (no JS) */
+    .theme {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+    .switch {
+      position: relative;
+      width: 46px;
+      height: 26px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--card);
+      transition: background .2s ease, border-color .2s ease;
+    }
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 3px;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 20%, transparent);
+      transition: left .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    #theme-toggle {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      clip-path: inset(50%);
+      overflow: hidden;
+      white-space: nowrap;
+      border: 0;
+      padding: 0;
+      margin: -1px;
+    }
+    #theme-toggle:focus-visible + label.switch {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    #theme-toggle:checked + label.switch::after {
+      left: 23px;
+    }
+
+    /* GitHub button */
+    .github-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--fg);
+      padding: .5rem .875rem;
+      border-radius: .625rem;
+      font-weight: 600;
+    }
+    .github-btn:hover { border-color: var(--link); }
+
+    /* Hero */
+    .hero {
+      padding: 3.5rem 0 4rem;
+    }
+    .hero .badge {
+      display: inline-block;
+      font-size: .85rem;
+      font-weight: 600;
+      padding: .375rem .75rem;
+      border-radius: 999px;
+      color: var(--brand);
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin: 1rem 0 0;
+    }
+    .subtitle {
+      color: var(--muted);
+      max-width: 60ch;
+      margin: 1rem auto 0;
+      font-size: 1.05rem;
+    }
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      border-radius: .625rem;
+      padding: .75rem 1rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--fg);
+    }
+    .btn-primary {
+      background: var(--brand);
+      color: var(--btn-fg);
+      border: 1px solid transparent;
+    }
+    .btn:hover { border-color: var(--link); }
+
+    /* Sections */
+    section { padding: 3.5rem 0; }
+    section header.section-head {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .section-title {
+      font-size: clamp(1.5rem, 3.5vw, 2rem);
+      letter-spacing: -0.02em;
+    }
+
+    /* Cards + grids */
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+    @media (min-width: 700px) {
+      .grid.features { grid-template-columns: repeat(3, 1fr); }
+      .grid.setup { grid-template-columns: repeat(3, 1fr); }
+    }
+    .card {
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: .75rem;
+      padding: 1rem;
+    }
+    .feature-icon { font-size: 1.25rem; }
+    .card h3 { margin: .35rem 0 .25rem; font-size: 1.05rem; }
+    .card p { color: var(--muted); font-size: .975rem; }
+
+    /* Architecture */
+    .arch-wrap {
+      display: grid;
+      gap: 1rem;
+      justify-items: center;
+      text-align: center;
+    }
+    .arch-note { color: var(--muted); max-width: 60ch; }
+
+    /* Setup steps */
+    .step-num {
+      font-weight: 800;
+      font-size: 1.75rem;
+      color: var(--brand);
+    }
+
+    /* Footer */
+    footer {
+      padding: 2.5rem 0 3rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+    }
+    .footer-links {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: .5rem;
+      flex-wrap: wrap;
+    }
+    .footer-links a { color: var(--link); }
+    .footer-links a:hover { text-decoration: underline; }
+
+    /* Links */
+    a.text-link { color: var(--link); }
+
+    /* Accessibility helper (visually hidden) */
+    .visually-hidden {
+      position: absolute !important;
+      height: 1px; width: 1px;
+      overflow: hidden;
+      clip: rect(1px, 1px, 1px, 1px);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <a class="logo" href="#">FreeMemory</a>
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <div class="theme">
+          <span aria-hidden="true">Light</span>
+          <input id="theme-toggle" type="checkbox" aria-label="Toggle dark mode" />
+          <label class="switch" for="theme-toggle" aria-hidden="true"></label>
+          <span aria-hidden="true">Dark</span>
+        </div>
+        <a class="github-btn" href="https://github.com/p-society/FreeMemory" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234C5.662 21.302 4.967 19.16 4.967 19.16c-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.765 21.797 24.199 17.3 24.199 12 24.2 5.373 18.627 0 12 0z"/>
+          </svg>
+          GitHub
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container" style="text-align:center;">
+        <span class="badge">Brain-Inspired</span>
+        <h1>FreeMemory<br>Advanced AI Memory System</h1>
+        <p class="subtitle">
+          A brain-inspired memory system for RAG applications featuring HMD v2 decay algorithm, 
+          hierarchical memory sectors, and graph-based knowledge traversal. Built with Bun.js, SQLite, and hnswlib 
+          for enterprise-grade performance.
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/p-society/FreeMemory" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234C5.662 21.302 4.967 19.16 4.967 19.16c-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.765 21.797 24.199 17.3 24.199 12 24.2 5.373 18.627 0 12 0z"/>
+            </svg>
+            View on GitHub
+          </a>
+          <a class="btn" href="#features">Learn More ↓</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <header class="section-head container">
+        <h2 class="section-title">Core Features</h2>
+      </header>
+      <div class="container grid features">
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>HMD v2 Decay Algorithm</h3>
+          <p>Brain-inspired memory decay that strengthens with access and weakens over time, mimicking human forgetting patterns.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>Memory Sectors</h3>
+          <p>Hierarchical organization with contextual groups like Work, Personal, and Learning, each with custom decay rates.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>Graph-Based Waypoints</h3>
+          <p>Multi-hop knowledge traversal with semantic, temporal, and causal relationships between memories.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>Vector Search</h3>
+          <p>hnswlib-powered approximate nearest neighbor search for sub-millisecond semantic similarity queries.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>RAG Context Retrieval</h3>
+          <p>Advanced retrieval combining vector similarity, memory strength, and graph traversal for optimal context.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"> </div>
+          <h3>Type-Safe Architecture</h3>
+          <p>Built with Bun.js, Drizzle ORM, and TypeScript for enterprise-grade reliability.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- <section>
+      <header class="section-head container">
+        <h2 class="section-title">System Architecture</h2>
+      </header>
+      <div class="container arch-wrap">
+        <div class="card" style="padding:0;">
+          <img src="./architecture.png" alt="FreeMemory System Architecture">
+        </div>
+        <p class="arch-note">
+          Hybrid architecture combining SQLite for metadata, hnswlib for vector search, and graph traversal for knowledge discovery.
+        </p>
+      </div>
+    </section> -->
+
+    <section>
+      <header class="section-head container">
+        <h2 class="section-title">Quick Setup</h2>
+      </header>
+      <div class="container grid setup">
+        <article class="card">
+          <div class="step-num">1</div>
+          <h3>Clone & Install</h3>
+          <p>Clone the repository and install dependencies with Bun for ultra-fast package management.</p>
+        </article>
+        <article class="card">
+          <div class="step-num">2</div>
+          <h3>Setup Database</h3>
+          <p>Run Drizzle migrations and seed the database with sample memories and sectors.</p>
+        </article>
+        <article class="card">
+          <div class="step-num">3</div>
+          <h3>Configure AI</h3>
+          <p>Set up your OpenAI API key and configure embedding models for vector search.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <header class="section-head container">
+        <h2 class="section-title">Technology Stack</h2>
+      </header>
+      <div class="container grid features">
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>Bun.js Runtime</h3>
+          <p>Ultra-fast JavaScript runtime with built-in bundler and package manager.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>SQLite + Drizzle</h3>
+          <p>Self-contained database with type-safe ORM and automatic migrations.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>hnswlib Vector Search</h3>
+          <p>High-performance approximate nearest neighbor search for millions of vectors.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>Vercel AI SDK</h3>
+          <p>Unified interface for OpenAI, Claude, Gemini, and other AI providers.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>Hono.js Framework</h3>
+          <p>Lightning-fast web framework with excellent TypeScript support.</p>
+        </article>
+        <article class="card">
+          <div class="feature-icon" aria-hidden="true"></div>
+          <h3>Graph Algorithms</h3>
+          <p>Recursive SQL queries for multi-hop path finding and knowledge discovery.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 FreeMemory. Brain-inspired memory system for the future of AI applications.</p>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="https://github.com/p-society/FreeMemory" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/p-society/FreeMemory/blob/master/DESIGN.md" target="_blank" rel="noopener">Documentation</a>
+        <a href="mailto:psocietyiiitbh@gmail.com">Contact</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
