@@ -10,11 +10,15 @@ router.post('/memory/add', async (c) => {
     if (!result.success) {
         return c.json({ error: result.error.format() }, 400);
     }
-    try{
-    const r = await addMemory(userId,content,chatId,userType); 
-    }catch(err){
+    try {
+        const r = await addMemory(userId, content, chatId, userType);
+    } catch (err) {
         return c.json({ error: err }, 400);
     }
+});
+
+router.get('/memory/get', (c) => {
+    return c.json({ status: 'ok' });
 });
 
 export default router;

@@ -1,6 +1,5 @@
 # dependencies (bun install)
 node_modules
-memory.db
 # output
 out
 dist
