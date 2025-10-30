@@ -25,6 +25,8 @@ export const memories = sqliteTable('memories', {
   lastAccessed: integer('last_accessed', { mode: 'timestamp' }).default(new Date()),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(new Date()),
   sectorId: text('sector_id'),
+  memoryType: text('memory_type').default('REGULAR'),
+  archived: integer('archived', { mode: 'boolean' }).default(false),
   metadata: text('metadata', { mode: 'json' }),
 }, (table) => ({
   strengthIdx: index('idx_memories_strength').on(table.strength),
@@ -33,6 +35,8 @@ export const memories = sqliteTable('memories', {
   sectorIdx: index('idx_memories_sector').on(table.sectorId),
   lastAccessedIdx: index('idx_memories_last_accessed').on(table.lastAccessed),
   createdAtIdx: index('idx_memories_created').on(table.createdAt),
+  memoryTypeIdx: index('idx_memories_type').on(table.memoryType),
+  archivedIdx: index('idx_memories_archived').on(table.archived),
   sectorStrengthIdx: index('idx_memories_sector_strength').on(table.sectorId, table.strength),
   decayIdx: index('idx_memories_decay').on(table.lastAccessed, table.decayRate),
   strengthCheck: check('strength_check', sql`${table.strength} >= 0.0 AND ${table.strength} <= 1.0`),
@@ -183,6 +187,25 @@ export const decayScheduleRelations = relations(decaySchedule, ({ one }) => ({
 
 export type Memory = typeof memories.$inferSelect;
 export type NewMemory = typeof memories.$inferInsert;
+
+export const MEMORY_TYPES = {
+  EPISODIC: 'episodic',
+  SEMANTIC: 'semantic',
+  PROCEDURAL: 'procedural',
+  EMOTIONAL: 'emotional',
+  REFLECTIVE: 'reflective'
+} as const;
+
+export type MemoryType = typeof MEMORY_TYPES[keyof typeof MEMORY_TYPES];
+
+export const DECAY_TIERS = {
+  CRITICAL: { rate: 0.99, halfLifeDays: 69, description: 'System prompts, core knowledge' },
+  IMPORTANT: { rate: 0.97, halfLifeDays: 23, description: 'User preferences, recent context' },
+  REGULAR: { rate: 0.95, halfLifeDays: 14, description: 'General information' },
+  EPHEMERAL: { rate: 0.90, halfLifeDays: 7, description: 'Temporary context, session data' }
+} as const;
+
+export type DecayTier = keyof typeof DECAY_TIERS;
 
 export type Sector = typeof sectors.$inferSelect;
 export type NewSector = typeof sectors.$inferInsert;
