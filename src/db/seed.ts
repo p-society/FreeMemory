@@ -158,7 +158,7 @@ async function seedDatabase() {
       const mem2 = sampleMemories[2];
       const mem3 = sampleMemories[3];
       const mem4 = sampleMemories[4];
-      
+
       if (mem0 && mem1 && mem2 && mem3 && mem4) {
         await db.insert(waypoints).values([
           {
@@ -193,7 +193,7 @@ async function seedDatabase() {
       const memoryCount = await db.select({ count: sql`count(*)` })
         .from(memories)
         .where(sql`sector_id LIKE ${sector.id + '%'}`);
-      
+
       const count = memoryCount[0]?.count || 0;
       await db.update(sectors)
         .set({ memoryCount: count as number })

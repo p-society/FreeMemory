@@ -41,7 +41,7 @@ export async function addMemory(content: string, userId: string, chatId: string,
         const embeddingVector = await GenerateEmbedding(content);
         const label = nextLabel++;
         hnswIndex.addPoint(embeddingVector, label);
-        
+
         metadataByLabel.set(label, { userId, chatId });
 
         await db.insert(memories).values({
