@@ -16,7 +16,7 @@ Output Format:
 
 export async function GenerateGraphRelation(text: string) {
     const response = await generateText({
-        model: google('gemini-1.5-flash'),
+        model: google('gemini-2.5-flash'),
         system: systemPrompt,
         prompt: text,
     });
@@ -50,3 +50,14 @@ export async function GenerateEmbedding(text: string): Promise<number[]> {
     }
 
 }
+
+// export async function generateSector(content: string): Promise<string> {
+//     const prompt = `Analyze the following content and determine the most appropriate sector it belongs to (e.g., technology, health, finance, education, entertainment, etc.). Respond with just the sector name.
+// `;
+//     const response = await generateText({
+//         model: google('gemini-2.5-flash'),
+//         system: prompt,
+//         prompt: content,
+//     });
+//     return response.text.trim();
+// }

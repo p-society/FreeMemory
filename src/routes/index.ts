@@ -4,7 +4,6 @@ import { addMemory } from '../hnsw/createHnswIndex';
 import { db } from '../db/db'
 import { memories } from '../db/schema';
 import { uuidv7 } from "uuidv7";
-import {GenerateGraphRelation} from "../ai-sdk/index.js";
 
 
 const router = new Hono();
@@ -25,11 +24,7 @@ router.post('/memory/add', async (c) => {
             chatId,
             userType,
             embeddingId: label,
-            strength: 0.75,
-            decayRate: 0.95,
             initialStrength: 0.75,
-            accessCount: 0,
-            reinforcementCount: 0,
             sectorId: 'programming',
             metadata: { type: 'problem', difficulty: 'advanced' }
         })
