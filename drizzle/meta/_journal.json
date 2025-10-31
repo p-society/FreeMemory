@@ -15,6 +15,13 @@
       "when": 1761815820722,
       "tag": "0001_smiling_black_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1761932241766,
+      "tag": "0002_naive_puma",
+      "breakpoints": true
     }
   ]
 }
