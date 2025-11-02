@@ -1,6 +1,7 @@
-import { generateText, embed } from 'ai';
+import { generateText, embed, generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
-
+import { sectorPrompt } from '../constants/index.js';
+import { z } from 'zod';
 
 export async function GenerateText(text: string, systemPrompt: string) {
     const response = await generateText({
@@ -9,6 +10,21 @@ export async function GenerateText(text: string, systemPrompt: string) {
         prompt: text,
     });
     return response;
+}
+
+export async function GenerateSectorObject (text: string, systemPrompt: string) {
+    const { object } = await generateObject({
+        model: google('gemini-2.5-flash'),
+        schema: z.object({
+            sector: z.object({
+                name: z.string(),
+                topics: z.array(z.string()),
+            }),
+        }),
+        system: systemPrompt,
+        prompt: text,
+    });
+    return object.sector;
 }
 
 type EmbeddingVector = number[] | Float32Array;
@@ -49,3 +65,6 @@ export async function GenerateEmbedding(text: string): Promise<number[]> {
 //     });
 //     return response.text.trim();
 // }
+const content = "Exploring the advancements in artificial intelligence and machine learning.";
+const sector = await GenerateSectorObject(content, sectorPrompt);
+console.log(sector.topics);

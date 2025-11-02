@@ -2,9 +2,9 @@ import { Hono } from 'hono';
 import { memorySchema } from '../dtos/main.dto.js';
 import { addMemory } from '../hnsw/createHnswIndex';
 import { db } from '../db/db'
-import { memories } from '../db/schema';
+import { memories, sectors } from '../db/schema';
 import { uuidv7 } from "uuidv7";
-import {GenerateText} from '../ai-sdk/index.js';
+import {GenerateSectorObject} from '../ai-sdk/index.js';
 import { sectorPrompt } from '../constants/index.js';
 
 const router = new Hono();
@@ -17,8 +17,18 @@ router.post('/memory/add', async (c) => {
     }  
 
     const label = await addMemory(userId, content, chatId, userType);
-    const sector = await GenerateText(content, sectorPrompt);
-        await db.insert(memories).values({
+    const s = await GenerateSectorObject(content, sectorPrompt);
+
+    await db.transaction(async (tx) => {
+        const sectorResult = await tx.insert(sectors).values({
+            id: uuidv7(),
+            name: s.name,
+            lastAccessed: new Date(),
+            topics: s.topics
+        }).returning();
+        const sectorId = sectorResult[0]?.id;
+        if (!sectorId) throw new Error('Failed to insert sector');
+        await tx.insert(memories).values({
             id: uuidv7(),
             content,
             userId,
@@ -26,9 +36,9 @@ router.post('/memory/add', async (c) => {
             userType,
             embeddingId: label,
             initialStrength: 0.75,
-            sectorId: 'programming',
-            metadata: { type: 'problem', difficulty: 'advanced' }
-        })
+            sectorId,
+        });
+    });
 
 });
 

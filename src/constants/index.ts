@@ -39,6 +39,9 @@ export const sectorList = [
 export const sectorPrompt =
 `Analyze the following content and determine the most appropriate sector it belongs to ${sectorList.join(', ')}. 
 Respond with just one of the sector names. if none of these sectors fit, respond with 'not-listed' but do not add any explanations
-or any sector names outside the provided list.
-output format:- it just be in a json format like {"sector": "sector_name"}
+or any sector names outside the provided list. also includes the topics like a subset of sector as my schema design is 
+  name: text('name').notNull(),
+  topics: text('topics', { mode: 'json' }), 
+  here name means the sector name and topics means the subset of sector.
+output format:- it just be in a json format like {"name": "sector_name", "topics": ["topic1", "topic2"]}
 `;
