@@ -4,7 +4,8 @@ import { addMemory } from '../hnsw/createHnswIndex';
 import { db } from '../db/db'
 import { memories } from '../db/schema';
 import { uuidv7 } from "uuidv7";
-
+import {GenerateText} from '../ai-sdk/index.js';
+import { sectorPrompt } from '../constants/index.js';
 
 const router = new Hono();
 
@@ -16,7 +17,7 @@ router.post('/memory/add', async (c) => {
     }  
 
     const label = await addMemory(userId, content, chatId, userType);
-
+    const sector = await GenerateText(content, sectorPrompt);
         await db.insert(memories).values({
             id: uuidv7(),
             content,
