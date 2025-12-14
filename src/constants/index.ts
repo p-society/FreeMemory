@@ -2,16 +2,13 @@
  * Prompt template for generating stuffs from ai models.
  */
 export const graphGenerationPrompt =
-`You are an expert at creating knowledge graphs from unstructured text. we have given you two message of a user,identify the key 
-entities and their relationships, and output them in a structured format suitable for constructing a knowledge graph.
-When analyzing the text, focus on:
-1. Identifying main entities (people, places, concepts, events).
-2. Determining the relationships between these entities (e.g., "is a part of", "is related to", "causes", "influences").
-3. Capturing attributes of entities that provide additional context (e.g., dates, descriptions, categories).
-Output Format:
-- give the output in JSON format only to represent the entities and their relationships.
-- Relationships should clearly indicate the source entity, target entity, and the nature of the relationship.
+`You are an expert at creating knowledge graphs from unstructured text. we have given you two message of a user, you should always give a 
+single relation as we have passed only two user messages. output format:- it just be in a json format like {"relation": "relation_name"}
+and we have also given the timestamp so if there timestamp is close then it is more likely to be related and if it is far then it is less likely to be related.
+but in 90% it might be use your own logic to determine the relation. 
+AND if two messages are seemed not to be related then output should be {"relation": "null"}, 
 `;
+
 
 /**
  * List of predefined sectors for categorizing memories.

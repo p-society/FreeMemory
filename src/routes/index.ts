@@ -4,8 +4,9 @@ import { addMemory } from '../hnsw/createHnswIndex';
 import { db } from '../db/db'
 import { memories, sectors } from '../db/schema';
 import { uuidv7 } from "uuidv7";
-import {GenerateSectorObject} from '../ai-sdk/index.js';
+import { GenerateSectorObject } from '../ai-sdk/index.js';
 import { sectorPrompt } from '../constants/index.js';
+import { generateGraphs } from '../utils/parallel-graph-gen';
 
 const router = new Hono();
 
@@ -14,11 +15,12 @@ router.post('/memory/add', async (c) => {
     const result = memorySchema.safeParse({ userId, chatId, userType, content });
     if (!result.success) {
         return c.json({ error: result.error.format() }, 400);
-    }  
+    }
 
     const label = await addMemory(userId, content, chatId, userType);
     const s = await GenerateSectorObject(content, sectorPrompt);
 
+    let memory1time;
     await db.transaction(async (tx) => {
         const sectorResult = await tx.insert(sectors).values({
             id: uuidv7(),
@@ -28,7 +30,7 @@ router.post('/memory/add', async (c) => {
         }).returning();
         const sectorId = sectorResult[0]?.id;
         if (!sectorId) throw new Error('Failed to insert sector');
-        await tx.insert(memories).values({
+        const insertedMemory = await tx.insert(memories).values({
             id: uuidv7(),
             content,
             userId,
@@ -37,9 +39,14 @@ router.post('/memory/add', async (c) => {
             embeddingId: label,
             initialStrength: 0.75,
             sectorId,
-        });
+        }).returning();
+        memory1time = insertedMemory[0]?.createdAt;
     });
-
+    const memory1 = `${content}\n AT \n${memory1time}`;
+    const graphs = await generateGraphs(memory1, userId);
+    console.log(graphs);
+    
+    return c.json({ status: 'ok' });
 });
 
 router.get('/memory/get', (c) => {

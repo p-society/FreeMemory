@@ -1,7 +1,14 @@
 import { generateText, embed, generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { sectorPrompt } from '../constants/index.js';
 import { z } from 'zod';
+import { graphGenerationPrompt } from '../constants';
+import type { relations } from 'drizzle-orm';
+import { openrouter } from '@openrouter/ai-sdk-provider';
+
+
+import type { TimestampFsp } from 'drizzle-orm/mysql-core';
 
 export async function GenerateText(text: string, systemPrompt: string) {
     const response = await generateText({
@@ -12,7 +19,7 @@ export async function GenerateText(text: string, systemPrompt: string) {
     return response;
 }
 
-export async function GenerateSectorObject (text: string, systemPrompt: string) {
+export async function GenerateSectorObject(text: string, systemPrompt: string) {
     const { object } = await generateObject({
         model: google('gemini-2.5-flash'),
         schema: z.object({
@@ -55,6 +62,18 @@ export async function GenerateEmbedding(text: string): Promise<number[]> {
 
 }
 
+export async function GenerateGraph(memory1: string, memory2: string): Promise<string> {
+    const { object } = await generateObject({
+        model: google('gemini-2.5-flash'),
+        schema: z.object({
+            relations: z.string(),
+        }),
+        system: graphGenerationPrompt,
+        prompt: `${memory1}\n\n${memory2}`,
+    });
+    return object.relations;
+}
+
 // export async function generateSector(content: string): Promise<string> {
 //     const prompt = `Analyze the following content and determine the most appropriate sector it belongs to (e.g., technology, health, finance, education, entertainment, etc.). Respond with just the sector name.
 // `;
@@ -65,6 +84,10 @@ export async function GenerateEmbedding(text: string): Promise<number[]> {
 //     });
 //     return response.text.trim();
 // }
-const content = "Exploring the advancements in artificial intelligence and machine learning.";
-const sector = await GenerateSectorObject(content, sectorPrompt);
-console.log(sector.topics);
+const time1 = "13-12-2025:13:10";
+const time2 = "13-12-2025:13:11";
+
+const t1 = `i ate oats${time1}`;
+const t2 = `am hungry${time2}`;
+const sector = await GenerateGraph(t1, t2);
+console.log(sector);
