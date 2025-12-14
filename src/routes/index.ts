@@ -6,7 +6,7 @@ import { memories, sectors } from '../db/schema';
 import { uuidv7 } from "uuidv7";
 import { GenerateSectorObject } from '../ai-sdk/index.js';
 import { sectorPrompt } from '../constants/index.js';
-import { generateGraphs } from '../utils/parallel-graph-gen';
+import { CreateWaypoints } from '../utils/CreateWaypoints.js';
 
 const router = new Hono();
 
@@ -20,6 +20,7 @@ router.post('/memory/add', async (c) => {
     const label = await addMemory(userId, content, chatId, userType);
     const s = await GenerateSectorObject(content, sectorPrompt);
 
+    let sourceMemoryId: string;
     let memory1time;
     await db.transaction(async (tx) => {
         const sectorResult = await tx.insert(sectors).values({
@@ -40,13 +41,14 @@ router.post('/memory/add', async (c) => {
             initialStrength: 0.75,
             sectorId,
         }).returning();
+        sourceMemoryId = insertedMemory[0]!.id;
         memory1time = insertedMemory[0]?.createdAt;
     });
     const memory1 = `${content}\n AT \n${memory1time}`;
-    const graphs = await generateGraphs(memory1, userId);
-    console.log(graphs);
-    
-    return c.json({ status: 'ok' });
+    const waypointStats = await CreateWaypoints(sourceMemoryId!, memory1, userId, chatId);
+    console.log(waypointStats);
+
+    return c.json({ status: 'ok', waypointStats });
 });
 
 router.get('/memory/get', (c) => {
