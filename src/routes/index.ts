@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { memorySchema } from '../dtos/main.dto.js';
-import { addMemory } from '../hnsw/createHnswIndex';
+import { addMemory, embeddingToBuffer } from '../hnsw/createHnswIndex';
 import { db } from '../db/db'
-import { memories, sectors } from '../db/schema';
+import { memories, sectors, vectorIndex, decaySchedule } from '../db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { uuidv7 } from "uuidv7";
 import { GenerateSectorObject } from '../ai-sdk/index.js';
 import { sectorPrompt } from '../constants/index.js';
@@ -17,22 +18,55 @@ router.post('/memory/add', async (c) => {
         return c.json({ error: result.error.format() }, 400);
     }
 
-    const label = await addMemory(userId, content, chatId, userType);
-    const s = await GenerateSectorObject(content, sectorPrompt);
+    const memoryId = uuidv7();
 
-    let sourceMemoryId: string;
+    const [{ label, embedding }, s] = await Promise.all([
+        addMemory(content, userId, chatId, userType, memoryId),
+        GenerateSectorObject(content, sectorPrompt),
+    ]);
+
     let memory1time;
     await db.transaction(async (tx) => {
-        const sectorResult = await tx.insert(sectors).values({
-            id: uuidv7(),
-            name: s.name,
-            lastAccessed: new Date(),
-            topics: s.topics
-        }).returning();
-        const sectorId = sectorResult[0]?.id;
-        if (!sectorId) throw new Error('Failed to insert sector');
+        const sectorName = s.name.toLowerCase().trim();
+        let sectorId: string;
+
+        const existing = await tx.select()
+            .from(sectors)
+            .where(eq(sectors.name, sectorName))
+            .limit(1);
+
+        if (existing.length > 0 && existing[0]) {
+            sectorId = existing[0].id;
+
+            const existingTopics = (existing[0].topics as string[]) || [];
+            const newTopics = (s.topics || []).filter(
+                (t: string) => !existingTopics.includes(t)
+            );
+            if (newTopics.length > 0) {
+                await tx.update(sectors)
+                    .set({ topics: [...existingTopics, ...newTopics] })
+                    .where(eq(sectors.id, sectorId));
+            }
+
+            await tx.update(sectors)
+                .set({
+                    lastAccessed: new Date(),
+                    memoryCount: sql`${sectors.memoryCount} + 1`,
+                })
+                .where(eq(sectors.id, sectorId));
+        } else {
+            const sectorResult = await tx.insert(sectors).values({
+                id: uuidv7(),
+                name: sectorName,
+                lastAccessed: new Date(),
+                topics: s.topics,
+                memoryCount: 1,
+            }).returning();
+            sectorId = sectorResult[0]!.id;
+        }
+
         const insertedMemory = await tx.insert(memories).values({
-            id: uuidv7(),
+            id: memoryId,
             content,
             userId,
             chatId,
@@ -41,14 +75,31 @@ router.post('/memory/add', async (c) => {
             initialStrength: 0.75,
             sectorId,
         }).returning();
-        sourceMemoryId = insertedMemory[0]!.id;
         memory1time = insertedMemory[0]?.createdAt;
-    });
-    const memory1 = `${content}\n AT \n${memory1time}`;
-    const waypointStats = await CreateWaypoints(sourceMemoryId!, memory1, userId, chatId);
-    console.log(waypointStats);
 
-    return c.json({ status: 'ok', waypointStats });
+        await tx.insert(vectorIndex).values({
+            memoryId,
+            vectorBytes: embeddingToBuffer(embedding),
+            dimension: 768,
+        });
+
+        const now = new Date();
+        const nextDecay = new Date(now.getTime() + 1 * 60 * 60 * 1000);
+        await tx.insert(decaySchedule).values({
+            memoryId,
+            lastDecayAt: now,
+            nextDecayAt: nextDecay,
+            decayIntervalHours: 1,
+            isActive: true,
+        });
+    });
+
+    const memory1 = `${content}\n AT \n${memory1time}`;
+    CreateWaypoints(memoryId, memory1, userId, chatId)
+        .then((stats) => console.log(`[Waypoints] ${stats.inserted}/${stats.total} created for ${memoryId}`))
+        .catch((err) => console.error('[Waypoints] Error:', err));
+
+    return c.json({ status: 'ok', memoryId });
 });
 
 router.get('/memory/get', (c) => {

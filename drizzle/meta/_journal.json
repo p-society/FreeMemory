@@ -22,6 +22,13 @@
       "when": 1761932241766,
       "tag": "0002_naive_puma",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1771044423644,
+      "tag": "0003_quiet_frog_thor",
+      "breakpoints": true
     }
   ]
 }
