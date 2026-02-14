@@ -6,8 +6,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch src/index.ts",
-    "start": "bun src/index.ts",
+    "dev": "bun --watch index.ts",
+    "start": "bun index.ts",
     "test": "bun test",
     "migrate": "bun src/db/migrate.ts",
     "seed": "bun src/db/seed.ts",

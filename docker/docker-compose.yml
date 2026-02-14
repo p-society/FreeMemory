@@ -1,1 +1,15 @@
-# gitkeep
+services:
+  brain-memory:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env
+    volumes:
+      - memory-data:/app/memory.db
+    restart: unless-stopped
+
+volumes:
+  memory-data:

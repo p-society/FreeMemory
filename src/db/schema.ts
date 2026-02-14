@@ -83,7 +83,7 @@ export const vectorIndex = sqliteTable('vector_index', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   memoryId: text('memory_id').notNull().unique(),
   vectorBytes: blob('vector_bytes'),
-  dimension: integer('dimension').notNull().default(1536),
+  dimension: integer('dimension').notNull().default(768),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(new Date()),
 }, (table) => ({
