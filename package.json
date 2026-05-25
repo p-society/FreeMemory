@@ -16,11 +16,12 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@ai-sdk/deepseek": "^2.0.35",
     "@ai-sdk/google": "^2.0.25",
     "@ai-sdk/openai": "^2.0.86",
     "@hono/zod-validator": "^0.2.0",
     "@openrouter/ai-sdk-provider": "^1.5.3",
-    "ai": "^5.0.82",
+    "ai": "^6.0.189",
     "dotenv": "^16.0.0",
     "drizzle-orm": "^0.44.7",
     "hnswlib-node": "^3.0.0",
